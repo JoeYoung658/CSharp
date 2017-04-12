@@ -1,2 +1,2 @@
 # CSharp
-C# Github Repo
+C# Github Repo containing all C# projects.
