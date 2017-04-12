@@ -10,19 +10,21 @@ using System.Windows.Forms;
 
 using System.Threading;
 using System.Net.NetworkInformation;
-using System.Management;
-using System.Management.Instrumentation;
-using System.Collections.Specialized;
+using System.Speech.Synthesis;
 
 namespace InternetStausChecker
 {
     public partial class InvisableForm : Form
     {
 
+        private static SpeechSynthesizer synth = new SpeechSynthesizer();
         NotifyIcon InternetStatusIcon;
         Icon InternetUpIcon;
         Icon InternetDownIcon;
         Thread InternetStatusChecker;
+        Boolean InternetUp = true;
+        private static Boolean MuteVoice = false;
+
 
         #region MainForm
 
@@ -43,12 +45,14 @@ namespace InternetStausChecker
 
 
             //Creates menu items
+            MenuItem muteVoiceMenuItem = new MenuItem("Mute");
             MenuItem aboutMenuItem = new MenuItem("About");
             MenuItem quitMenuitem = new MenuItem("Quit");
 
             //Creates context menu
             ContextMenu contextMenu = new ContextMenu();
             //Adds Menu items to context menu
+            contextMenu.MenuItems.Add(muteVoiceMenuItem);
             contextMenu.MenuItems.Add(aboutMenuItem);
             contextMenu.MenuItems.Add(quitMenuitem);
 
@@ -59,6 +63,8 @@ namespace InternetStausChecker
             quitMenuitem.Click += QuitMenuitem_Click;
             //About Button
             aboutMenuItem.Click += AboutMenuItem_Click;
+            //muteVoiceButton
+            muteVoiceMenuItem.Click += muteVoiceMenuItem_Click;
 
 
 
@@ -72,6 +78,8 @@ namespace InternetStausChecker
 
 
         }
+
+        
 
         #endregion
 
@@ -95,9 +103,32 @@ namespace InternetStausChecker
         /// <param name="e"></param>
         private void AboutMenuItem_Click(object sender, EventArgs e)
         {
-            String message = ("Internet Status Checker V.1.0 By Joe Young");
+            String message = ("Internet Status Checker V.2.0 By Joe Young");
             String caption = ("About");
-            MessageBox.Show(message, caption);
+            MessageBoxes(message, caption);
+        }
+
+        /// <summary>
+        /// Turns off the voice alert when internet goes down
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void muteVoiceMenuItem_Click(object sender, EventArgs e)
+        {
+            if (MuteVoice.Equals(false))
+            {
+                MuteVoice = true;
+                String message = ("Jarvis has now been muted");
+                String caption = ("Info");
+                MessageBoxes(message, caption);
+            }
+            else
+            {
+                MuteVoice = false;
+                String message = ("Jarvis has now been unmuted");
+                String caption = ("Info");
+                MessageBoxes(message, caption);
+            }
         }
 
 
@@ -113,6 +144,7 @@ namespace InternetStausChecker
             {
                 //Main loop
                 Ping pingSender = new Ping();
+                
                 while (true)
                 { 
                     // Ping's googles DNS to test internet connection
@@ -120,11 +152,22 @@ namespace InternetStausChecker
                     {
                         
                         PingReply reply = pingSender.Send("8.8.8.8");                     
-                        InternetStatusIcon.Icon = InternetUpIcon;                       
+                        InternetStatusIcon.Icon = InternetUpIcon;
+
+                        if (InternetUp.Equals(false))
+                        {
+                            Jarvis("Hey Joe, the internet is back up", VoiceGender.Male);
+                        }
+                        InternetUp = true;
                     } catch {
+
                         InternetStatusIcon.Icon = InternetDownIcon;
+                        Jarvis("Hey Joe, the internet has gone down", VoiceGender.Male);
+                        InternetUp = false;
+                        
+
                     }           
-                    Thread.Sleep(1000);
+                    Thread.Sleep(10000);
                 }
             }
             catch (ThreadAbortException)
@@ -135,9 +178,35 @@ namespace InternetStausChecker
 
         #endregion
 
+        #region Functions
+
+        public static void Jarvis(string message, VoiceGender voiceGender)
+        {
+
+            if (MuteVoice.Equals(false))
+            {
+                synth.SelectVoiceByHints(voiceGender);
+                synth.Speak(message);
+            }
+
+        }
+
+        public static void MessageBoxes(String message, String caption)
+        {
+
+            MessageBox.Show(message, caption);
+
+        }
+
+        #endregion
+
+
+
         private void Form1_Load(object sender, EventArgs e)
         {
 
         }
     }
+
+    
 }  
