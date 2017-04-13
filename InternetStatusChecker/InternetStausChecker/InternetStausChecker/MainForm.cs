@@ -275,6 +275,4 @@ namespace InternetStausChecker
         }
     }
 #endregion
-
-
 }  
