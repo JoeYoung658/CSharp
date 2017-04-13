@@ -16,22 +16,27 @@ namespace InternetStausChecker
 {
     public partial class InvisableForm : Form
     {
-
+        
+#region Global Varibles
         private static SpeechSynthesizer synth = new SpeechSynthesizer();
         NotifyIcon InternetStatusIcon;
         Icon InternetUpIcon;
         Icon InternetDownIcon;
         Thread InternetStatusChecker;
         Boolean InternetUp = true;
+        Boolean IconClose = false;
         private static Boolean MuteVoice = false;
+        private static String UserName = "";
+#endregion
 
-
-        #region MainForm
+#region MainForm
 
 
         public InvisableForm()
         {
             InitializeComponent();
+
+            this.FormClosing += InvisableForm_FormClosing;
 
             //Loads Icons form files into objects
             InternetUpIcon = new Icon("UP.ico");
@@ -44,15 +49,18 @@ namespace InternetStausChecker
             InternetStatusIcon.Visible = true;
 
 
+
             //Creates menu items
-            MenuItem muteVoiceMenuItem = new MenuItem("Mute");
+            MenuItem settingsMenuItem = new MenuItem("Settings");
+            MenuItem quickMuteVoiceMenuItem = new MenuItem("Quick Jarvis Mute");
             MenuItem aboutMenuItem = new MenuItem("About");
             MenuItem quitMenuitem = new MenuItem("Quit");
 
             //Creates context menu
             ContextMenu contextMenu = new ContextMenu();
             //Adds Menu items to context menu
-            contextMenu.MenuItems.Add(muteVoiceMenuItem);
+            contextMenu.MenuItems.Add(settingsMenuItem);
+            contextMenu.MenuItems.Add(quickMuteVoiceMenuItem);
             contextMenu.MenuItems.Add(aboutMenuItem);
             contextMenu.MenuItems.Add(quitMenuitem);
 
@@ -64,13 +72,16 @@ namespace InternetStausChecker
             //About Button
             aboutMenuItem.Click += AboutMenuItem_Click;
             //muteVoiceButton
-            muteVoiceMenuItem.Click += muteVoiceMenuItem_Click;
+            quickMuteVoiceMenuItem.Click += quickMuteVoiceMenuItem_Click;
+            //settingsMenuButton
+            settingsMenuItem.Click += SettingsMenuItem_Click;
 
 
 
             ///This hides the form as it is a notication tray application
             this.WindowState = FormWindowState.Minimized;
             this.ShowInTaskbar = false;
+            
 
             //Starts the worker thread that checks the status of the inernet
             InternetStatusChecker = new Thread(new ThreadStart(InternetStatusTread));
@@ -81,9 +92,10 @@ namespace InternetStausChecker
 
         
 
-        #endregion
 
-        #region ContextMenus
+#endregion
+
+#region ContextMenus
         /// <summary>
         /// Contains the code for the quit button
         /// </summary>
@@ -91,6 +103,7 @@ namespace InternetStausChecker
         /// <param name="e"></param>
         private void QuitMenuitem_Click(object sender, EventArgs e)
         {
+            IconClose = true;
             InternetStatusChecker.Abort();
             InternetStatusIcon.Dispose();
             this.Close();
@@ -103,7 +116,7 @@ namespace InternetStausChecker
         /// <param name="e"></param>
         private void AboutMenuItem_Click(object sender, EventArgs e)
         {
-            String message = ("Internet Status Checker V.2.0 By Joe Young");
+            String message = ("Internet Status Checker V.3.0 By Joe Young");
             String caption = ("About");
             MessageBoxes(message, caption);
         }
@@ -113,28 +126,40 @@ namespace InternetStausChecker
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void muteVoiceMenuItem_Click(object sender, EventArgs e)
+        private void quickMuteVoiceMenuItem_Click(object sender, EventArgs e)
         {
             if (MuteVoice.Equals(false))
             {
-                MuteVoice = true;
+                MuteJarvis_CheckBox(null, null);
+                //MuteVoice = true;
                 String message = ("Jarvis has now been muted");
                 String caption = ("Info");
                 MessageBoxes(message, caption);
             }
             else
             {
-                MuteVoice = false;
-                String message = ("Jarvis has now been unmuted");
-                String caption = ("Info");
-                MessageBoxes(message, caption);
+                MuteJarvis_CheckBox(null, null);
+                //String message = ("Jarvis has now been unmuted");
+                //String caption = ("Info");
+                //MessageBoxes(message, caption);
             }
         }
 
+        /// <summary>
+        /// Contains the function for the settings menu
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void SettingsMenuItem_Click(object sender, EventArgs e)
+        {
+            this.WindowState = FormWindowState.Normal;
+            this.ShowInTaskbar = true;
+        }
 
-        #endregion
 
-        #region Threads
+#endregion
+
+#region Threads
         /// <summary>
         /// This is the thread that pings googles DNS to check if the internet is active.
         /// </summary>
@@ -156,13 +181,13 @@ namespace InternetStausChecker
 
                         if (InternetUp.Equals(false))
                         {
-                            Jarvis("Hey Joe, the internet is back up", VoiceGender.Male);
+                            Jarvis("Hey " + UserName +  ", the internet is back up", VoiceGender.Male);
                         }
                         InternetUp = true;
                     } catch {
 
                         InternetStatusIcon.Icon = InternetDownIcon;
-                        Jarvis("Hey Joe, the internet has gone down", VoiceGender.Male);
+                        Jarvis("Hey " + UserName + ", the internet has gone down", VoiceGender.Male);
                         InternetUp = false;
                         
 
@@ -176,15 +201,16 @@ namespace InternetStausChecker
             }
         }
 
-        #endregion
+#endregion
 
-        #region Functions
+#region Functions
 
         public static void Jarvis(string message, VoiceGender voiceGender)
         {
 
             if (MuteVoice.Equals(false))
             {
+                
                 synth.SelectVoiceByHints(voiceGender);
                 synth.Speak(message);
             }
@@ -198,15 +224,56 @@ namespace InternetStausChecker
 
         }
 
-        #endregion
+#endregion
 
+#region FormEvents
 
-
-        private void Form1_Load(object sender, EventArgs e)
+        private void InvisavleForm_Load(object sender, EventArgs e)
         {
 
         }
-    }
 
-    
+        private void InvisableForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            if (e.CloseReason == CloseReason.UserClosing) {
+
+                this.WindowState = FormWindowState.Minimized;
+                this.ShowInTaskbar = false;
+
+                if (IconClose.Equals(false))
+                { 
+                    e.Cancel = true;
+                }
+            }
+        }
+
+        private void MuteJarvis_CheckBox(object sender, EventArgs e)
+        {
+            if (MuteVoice.Equals(false))
+            {
+                MuteVoice = true;
+                isMuted.Text = ("Jarvis is now muted");
+
+            }
+            else
+            {
+                MuteVoice = false;
+                Jarvis("Jarvis has been unmuted", VoiceGender.Female);
+                isMuted.Text = ("Jarvis is not muted");
+               
+            }
+        }
+
+        private void IsMuted_Click(object sender, EventArgs e)
+        {
+            
+        }
+
+        private void UserNameTextBox_TextChanged(object sender, EventArgs e)
+        {
+            UserName = UserNameTextBox.Text;
+        }
+    }
+#endregion
+
 }  
