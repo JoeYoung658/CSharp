@@ -51,7 +51,7 @@
             this.isMuted.AccessibleDescription = "Test";
             this.isMuted.AccessibleName = "IsMuted";
             this.isMuted.AutoSize = true;
-            this.isMuted.Location = new System.Drawing.Point(98, 36);
+            this.isMuted.Location = new System.Drawing.Point(108, 35);
             this.isMuted.Name = "isMuted";
             this.isMuted.Size = new System.Drawing.Size(94, 13);
             this.isMuted.TabIndex = 1;
@@ -69,7 +69,7 @@
             // 
             // UserNameTextBox
             // 
-            this.UserNameTextBox.Location = new System.Drawing.Point(101, 6);
+            this.UserNameTextBox.Location = new System.Drawing.Point(111, 6);
             this.UserNameTextBox.Name = "UserNameTextBox";
             this.UserNameTextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.None;
             this.UserNameTextBox.Size = new System.Drawing.Size(91, 21);
